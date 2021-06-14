@@ -188,10 +188,12 @@ def clone_the_repo(config, node, path_to_clone):
 
     """
     log.info("cloning the repo")
-    branch = config.get("branch", "master")
+#    branch = config.get("branch", "master")
+    branch = config.get("branch", "fix_ms")
     log.info(f"branch: {branch}")
     repo_url = config.get(
-        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+#        "git-url", "https://github.com/red-hat-storage/ceph-qe-scripts.git"
+        "git-url", "https://github.com/mkasturi18/ceph-qe-scripts.git"
     )
     log.info(f"repo_url: {repo_url}")
     git_clone_cmd = f"sudo git clone {repo_url} -b {branch}"
