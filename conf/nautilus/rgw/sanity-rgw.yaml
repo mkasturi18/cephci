@@ -19,6 +19,7 @@ globals:
        role: client
      node6:
        role: installer
+       role: grafana-server
      node7:
        role: mds
      node8:
