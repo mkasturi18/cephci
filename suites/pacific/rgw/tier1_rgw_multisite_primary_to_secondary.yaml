@@ -496,3 +496,26 @@ tests:
             config-file-name: test_bucket_policy_replace.yaml
             verify-io-on-site: ["ceph-sec"]
             timeout: 300
+  - test:
+      name: datalog omap offload tests 
+      desc: test_datalog_omap_offload on secondary
+      module: sanity_rgw_multisite.py
+      clusters:
+        ceph-pri:
+          config:
+            script-name: test_data_omap_offload.py
+            config-file-name: test_data_omap_offload.yaml
+            verify-io-on-site: ["ceph-sec"]
+            timeout: 300
+
+  - test:
+      name: datalog omap offload tests 
+      desc: test_datalog_omap_offload on secondary
+      module: sanity_rgw_multisite.py
+      clusters:
+        ceph-pri:
+          config:
+            script-name: test_data_omap_offload.py
+            config-file-name: test_data_omap_offload_multipart.yaml
+            verify-io-on-site: ["ceph-sec"]
+            timeout: 300   
