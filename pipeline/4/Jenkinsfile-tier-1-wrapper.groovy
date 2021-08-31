@@ -9,6 +9,7 @@ def sharedLib
 def test_results = [:]
 def composeInfo = ""
 def tier1Jobs = [
+                    "rhceph-4-tier-1-deploy",
                     "rhceph-4-tier-1-object",
                     "rhceph-4-tier-1-rbd",
                     "rhceph-4-tier-1-cephfs"
@@ -95,6 +96,7 @@ node(nodeName) {
             "repository=${ciValues["repository"]}"
         ]) {
             sharedLib.sendEMail("Tier-1", test_results, false)
+            sharedLib.sendGChatNotification("Tier-1")
             sharedLib.postTierCompose(test_results, composeInfo, "tier1")
 
             def result_set = test_results.values().toSet()
