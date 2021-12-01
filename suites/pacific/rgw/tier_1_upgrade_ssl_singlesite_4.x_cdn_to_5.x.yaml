@@ -37,7 +37,7 @@ tests:
             pgs: "16"
           - name: "cephfs_metadata"
             pgs: "16"
-    desc: deploy ceph containerized 4.x cdn setup using ceph-ansible
+    desc: deploy ceph cluster on 4.x cdn setup using ceph-ansible
     destroy-cluster: False
     abort-on-fail: true
 
@@ -47,14 +47,14 @@ tests:
     config:
       role: rgw
       commands: 
-        - "ceph -s"
-        - "ceph versions"
+        - "sudo ceph -s"
+        - "sudo ceph versions"
         - "sudo netstat -nltp | grep radosgw"
     desc: Check for ceph health after deploying the cluster
 
 - test:
     name: Beast SSL RGW test
-    desc: RGW SSL testing with Beast frontend enabled
+    desc: enable RGW Beast frontend with SSL 
     polarion-id: CEPH-10359
     module: sanity_rgw.py
     config:
@@ -105,8 +105,8 @@ tests:
     config:
       role: rgw
       commands:
-         - "ceph -s"
-         - "ceph versions"
+         - "sudo ceph -s"
+         - "sudo ceph versions"
     desc: Check for ceph health after switch to containerized ceph daemons
 
 - test:
@@ -158,8 +158,8 @@ tests:
     module: exec.py
     config:
       commands:
-         - "ceph -s"
-         - "ceph versions"
+         - "sudo ceph -s"
+         - "sudo ceph versions"
     desc: Check ceph health post upgrade to latest 5.x
 
 - test:
