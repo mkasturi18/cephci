@@ -36,3 +36,4 @@ instance:
       - curl -k -o /etc/pki/ca-trust/source/anchors/RH-IT-Root-CA.crt https://10.245.4.89/.RH-IT-Root-CA.crt
       - update-ca-trust
       - touch /ceph-qa-ready
+      - echo "domain syd.qe.rhceph.local" >> /etc/resolv.conf
