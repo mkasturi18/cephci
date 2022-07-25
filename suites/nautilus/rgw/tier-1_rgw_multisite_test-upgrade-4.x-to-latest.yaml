@@ -157,6 +157,33 @@ tests:
       name: test unordered listing of buckets
       polarion-id: CEPH-83573545
 
+  # Test cluster before upgrade
+  - test:
+      clusters:
+        ceph-rgw1:
+          config:
+            script-name: test_data_omap_offload.py
+            config-file-name: test_data_omap_offload.yaml
+            timeout: 300
+      desc: test default datalog type before upgrade
+      module: sanity_rgw_multisite.py
+      name: Test datalog omap before upgrade
+      polarion-id: CEPH-83573696
+
+  - test:
+      clusters:
+        ceph-rgw1:
+          config:
+            script-name: test_data_omap_offload.py
+            config-file-name: test_data_omap_offload.yaml
+            timeout: 300
+      desc: test change of datalog type to fifo before upgrade
+      module: sanity_rgw_multisite.py
+      name: Test datalog change to fifo before upgrade
+      polarion-id: CEPH-83573692
+
+
+
   # Performing cluster upgrade
 
   - test:
@@ -221,6 +248,17 @@ tests:
       polarion-id: CEPH-83574658
 
   # Test cluster post upgrade
+  - test:
+      clusters:
+        ceph-rgw1:
+          config:
+            script-name: test_data_omap_offload.py
+            config-file-name: test_data_omap_offload.yaml
+            timeout: 300
+      desc: test datalog type post upgrade
+      module: sanity_rgw_multisite.py
+      name: Test datalog omap post upgrade
+      polarion-id: CEPH-83573696
 
   - test:
       clusters:
