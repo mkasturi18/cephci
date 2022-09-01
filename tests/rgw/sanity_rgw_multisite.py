@@ -79,6 +79,14 @@ def run(**kw):
     set_env = config.get("set-env", False)
     primary_cluster = clusters.get("ceph-rgw1", clusters[list(clusters.keys())[0]])
     secondary_cluster = clusters.get("ceph-rgw2", clusters[list(clusters.keys())[1]])
+    archive_cluster_exists = False
+    if "ceph-archive" in clusters.keys():
+        archive_cluster = clusters.get(
+            "ceph-archive", clusters[list(clusters.keys())[2]]
+        )
+        archive_rgw_node = archive_cluster.get_ceph_object("rgw").node
+        archive_cluster_exists = True
+
     primary_rgw_node = primary_cluster.get_ceph_object("rgw").node
     secondary_rgw_node = secondary_cluster.get_ceph_object("rgw").node
 
@@ -95,7 +103,9 @@ def run(**kw):
         if primary_cluster.rhcs_version.version[0] >= 5:
             setup_cluster_access(primary_cluster, primary_rgw_node)
             setup_cluster_access(secondary_cluster, secondary_rgw_node)
-
+            if archive_cluster_exists:
+                #                archive_rgw_node = archive_cluster.get_ceph_object("rgw").node
+                setup_cluster_access(archive_cluster, archive_rgw_node)
     # run the test
     script_name = config.get("script-name")
     config_file_name = config.get("config-file-name")
@@ -131,18 +141,19 @@ def run(**kw):
         long_running=True,
     )
     if test_status == 0:
-        copy_user_to_site = clusters.get(config.get("copy-user-info-to-site"))
-        if copy_user_to_site:
+        copy_user_to_sites = config.get("copy-user-info-to-site", [])
+        if copy_user_to_sites:
             log.info(f'copy_user_to_site: {config.get("copy-user-info-to-site")}')
-            copy_user_to_site_node = copy_user_to_site.get_ceph_object("rgw").node
-            user_details_file = test_folder_path + lib_dir + "user_details.json"
-            copy_file_from_node_to_node(
-                user_details_file,
-                test_site_node,
-                copy_user_to_site_node,
-                user_details_file,
-            )
-            verify_sync_status(copy_user_to_site_node)
+            for site in copy_user_to_sites:
+                copy_user_to_site_node = clusters.get(site).get_ceph_object("rgw").node
+                user_details_file = test_folder_path + lib_dir + "user_details.json"
+                copy_file_from_node_to_node(
+                    user_details_file,
+                    test_site_node,
+                    copy_user_to_site_node,
+                    user_details_file,
+                )
+                verify_sync_status(copy_user_to_site_node)
 
         verify_io_on_sites = config.get("verify-io-on-site", [])
         if verify_io_on_sites:
