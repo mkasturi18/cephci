@@ -1,0 +1,74 @@
+globals:
+  -
+    ceph-cluster:
+      name: ceph
+      networks:
+        public: ['10.1.240.0/23']
+      nodes:
+        -
+          hostname: dell-r640-091.dsal.lab.eng.rdu2.redhat.com
+          id: node1
+          ip: 10.1.240.66
+          root_password: r
+          role:
+            - _admin
+            - installer
+            - mon
+            - mgr
+        -
+          hostname: dell-r640-090.dsal.lab.eng.rdu2.redhat.com
+          id: node2
+          ip: 10.1.240.65
+          root_password: r
+          role:
+            - mon
+            - mgr
+        -
+          hostname: dell-r640-058.dsal.lab.eng.rdu2.redhat.com
+          id: node3
+          ip: 10.1.240.33
+          root_password: r
+          role:
+            - mon
+            - client
+        -
+          hostname: dell-r640-074.dsal.lab.eng.rdu2.redhat.com
+          id: node4
+          ip: 10.1.240.49
+          root_password: r
+          role:
+            - osd
+            - rgw
+          volumes:
+            - /dev/sdb
+        -
+          hostname: dell-r640-075.dsal.lab.eng.rdu2.redhat.com
+          id: node5
+          ip: 10.1.240.50
+          root_password: r
+          role:
+            - osd
+            - rgw 
+          volumes:
+            - /dev/sdb
+        -   
+          hostname: dell-r640-088.dsal.lab.eng.rdu2.redhat.com
+          id: node6      
+          ip: 10.1.240.63
+          root_password: r
+          role:
+            - osd
+            - rgw 
+          volumes:
+            - /dev/sdb
+        -
+          hostname: dell-r640-089.dsal.lab.eng.rdu2.redhat.com
+          id: node7
+          ip: 10.1.240.64
+          root_password: r
+          role:
+            - osd
+            - rgw
+          volumes:
+            - /dev/sdb
+
