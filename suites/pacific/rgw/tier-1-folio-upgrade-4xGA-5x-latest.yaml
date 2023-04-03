@@ -1,0 +1,142 @@
+# This suite file is to perform a mutlsite upgrade from 4.3GA to 5.3x(latest)
+
+# Polarion ID: CEPH-83574647
+# Objective: Testing Multisite upgrade from RHCS 4 GA to RHCS 5 latest development build.
+# conf: rgw_multisite.yaml
+# platform: rhel-8
+---
+tests:
+
+  - test:
+      abort-on-fail: true
+      desc: install ceph pre requisites
+      module: install_prereq.py
+      name: install vm pre-requsites
+
+  - test:
+      abort-on-fail: true
+      clusters:
+        ceph-pri:
+          config:
+            primary_node: ceph-pri
+            use_cdn: true
+            build: "4.x"
+            ansi_config:
+              ceph_origin: repository
+              ceph_repository: rhcs
+              ceph_repository_type: cdn
+              ceph_rhcs_version: 4
+              osd_scenario: lvm
+              osd_auto_discovery: false
+              radosgw_num_instances: 2
+              containerized_deployment: true
+              ceph_docker_image: rhceph/rhceph-4-rhel8
+              ceph_docker_image_tag: latest
+              ceph_docker_registry: registry.redhat.io
+              copy_admin_key: true
+              dashboard_enabled: true
+              dashboard_admin_user: admin
+              dashboard_admin_password: p@ssw0rd
+              grafana_admin_user: admin
+              grafana_admin_password: p@ssw0rd
+              node_exporter_container_image: registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.6
+              grafana_container_image: registry.redhat.io/rhceph/rhceph-4-dashboard-rhel8:4
+              prometheus_container_image: registry.redhat.io/openshift4/ose-prometheus:v4.6
+              alertmanager_container_image: registry.redhat.io/openshift4/ose-prometheus-alertmanager:v4.6
+              rgw_multisite: true
+              rgw_zone: US_EAST
+              rgw_zonegroup: US
+              rgw_realm: USA
+              rgw_zonemaster: true
+              rgw_zonesecondary: false
+              rgw_zonegroupmaster: true
+              rgw_zone_user: synchronization-user
+              rgw_zone_user_display_name: "Synchronization User"
+              rgw_multisite_proto: "http"
+              system_access_key: 86nBoQOGpQgKxh4BLMyq
+              system_secret_key: NTnkbmkMuzPjgwsBpJ6o
+        ceph-sec:
+          config:
+            primary_node: ceph-pri
+            use_cdn: true
+            build: "4.x"
+            ansi_config:
+              ceph_origin: repository
+              ceph_repository: rhcs
+              ceph_repository_type: cdn
+              ceph_rhcs_version: 4
+              osd_scenario: lvm
+              osd_auto_discovery: false
+              radosgw_num_instances: 2
+              containerized_deployment: true
+              ceph_docker_image: rhceph/rhceph-4-rhel8
+              ceph_docker_image_tag: latest
+              ceph_docker_registry: registry.redhat.io
+              copy_admin_key: true
+              dashboard_enabled: true
+              dashboard_admin_user: admin
+              dashboard_admin_password: p@ssw0rd
+              grafana_admin_user: admin
+              grafana_admin_password: p@ssw0rd
+              node_exporter_container_image: registry.redhat.io/openshift4/ose-prometheus-node-exporter:v4.6
+              grafana_container_image: registry.redhat.io/rhceph/rhceph-4-dashboard-rhel8:4
+              prometheus_container_image: registry.redhat.io/openshift4/ose-prometheus:v4.6
+              alertmanager_container_image: registry.redhat.io/openshift4/ose-prometheus-alertmanager:v4.6
+              rgw_multisite: true
+              rgw_zone: US_WEST
+              rgw_zonegroup: US
+              rgw_realm: USA
+              rgw_zonemaster: false
+              rgw_zonesecondary: true
+              rgw_zonegroupmaster: false
+              rgw_zone_user: synchronization-user
+              rgw_zone_user_display_name: "Synchronization User"
+              system_access_key: 86nBoQOGpQgKxh4BLMyq
+              system_secret_key: NTnkbmkMuzPjgwsBpJ6o
+              rgw_multisite_proto: "http"
+              rgw_pull_proto: http
+              rgw_pull_port: 8080
+      desc: Deploying Ceph multisite RGW cluster using ceph-ansible
+      polarion-id: CEPH-83574664
+      module: test_ansible.py
+      name: deploy ceph multisite cluster from cdn
+
+  - test:
+      name: check-ceph-health
+      polarion-id: CEPH-83575200
+      module: exec.py
+      config:
+        commands:
+           - "ceph -s"
+           - "ceph versions"
+        sudo: True
+      desc: check for ceph status and version
+  - test:
+      abort-on-fail: true
+      clusters:
+        ceph-pri:
+          config:
+            haproxy_clients:
+              - folio02 # client RGWs
+              - folio01 # sync RGWs
+            rgw_endpoints:
+              - "folio02:8080" # first 3 client io RGWs
+              - "folio03:8080"
+              - "folio04:8080"
+              - "folio05:8080" # second 3 are for sync rgws
+              - "folio06:8080"
+              - "folio07:8080"
+        ceph-sec:
+          config:
+            haproxy_clients:
+              - folio09 # client RGWs
+              - folio08 # sync RGWs
+            rgw_endpoints:
+              - "folio09:8080" # first 3 client io RGWs
+              - "folio10:8080"
+              - "folio11:8080"
+              - "folio12:8080" # second 3 are for sync rgws
+              - "folio13:8080"
+              - "folio14:8080"
+      desc: "Configure HAproxy"
+      module: haproxy.py
