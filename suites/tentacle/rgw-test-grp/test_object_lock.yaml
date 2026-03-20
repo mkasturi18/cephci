@@ -1,0 +1,89 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: object lock verification
+    desc: object lock test
+    polarion-id: CEPH-83574055
+    module: sanity_rgw.py
+    config:
+      script-name: test_object_lock.py
+      config-file-name: test_object_lock_compliance.yaml
+- test:
+    name: object lock verification
+    desc: object lock test
+    polarion-id: CEPH-83574055
+    module: sanity_rgw.py
+    config:
+      script-name: test_object_lock.py
+      config-file-name: test_object_lock_compliance.yaml
+- test:
+    name: Test object lock configuration for existing buckets
+    desc: Test object lock configuration for existing buckets
+    polarion-id: CEPH-83574059
+    module: sanity_rgw.py
+    config:
+      script-name: test_object_lock.py
+      config-file-name: test_bucket_lock_later.yaml
+- test:
+    name: object level retention test Governance mode
+    desc: object level retention test Governance mode
+    polarion-id: CEPH-83574058
+    module: sanity_rgw.py
+    config:
+      script-name: test_object_level_retention.py
+      config-file-name: test_object_level_governance.yaml
+- test:
+    name: object lock no overwrite
+    desc: object lock no overwrite
+    polarion-id: CEPH-83574059
+    module: sanity_rgw.py
+    config:
+      script-name: test_object_lock_no_overwrite.py
+      config-file-name: test_object_lock_no_overwrite.yaml

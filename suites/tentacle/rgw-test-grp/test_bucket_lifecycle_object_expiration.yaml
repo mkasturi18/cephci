@@ -1,0 +1,332 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Bucket Lifecycle Object_expiration_tests for Prefix and tag based filter and for more than one days
+    desc: Test object expiration for Prefix and tag based filter and for more than one days
+    polarion-id: CEPH-11179
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_prefix_and_tag.yaml
+- test:
+    name: Header validation of Bucket Lifecycle expiration with date
+    desc: Test header validation bucket lifecycle expiration with date
+    polarion-id: CEPH-83573254
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_date_expire_header.yaml
+- test:
+    name: Header validation of Bucket Lifecycle expiration with days
+    desc: Test header validation bucket lifecycle expiration with days
+    polarion-id: CEPH-83573254
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_days_expire_header.yaml
+- test:
+    name: Bucket Lifecycle Object_expiration_tests for Prefix and tag based filter and for more than one days
+    desc: Test object expiration for Prefix and tag based filter and for more than one days
+    polarion-id: CEPH-11180
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_prefix_and_tag.yaml
+- test:
+    name: Bucket Lifecycle Object_expiration_tests for non current version expiration
+    desc: Test object expiration for non current version expiration
+    polarion-id: CEPH-11190
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_prefix_non_current_days.yaml
+- test:
+    name: Bucket Lifecycle expiration Tests
+    desc: Test lifecycle with 100 bucket containing 10 objects each
+    polarion-id: CEPH-11177
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_bucket_lc_multiple_bucket.yaml
+- test:
+    name: Test LC with custom worktime
+    desc: Test LC with custom worktime
+    polarion-id: CEPH-83583080
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_with_custom_worktime.yaml
+- test:
+    name: object expiration with expiration set to Date
+    desc: Test object expiration with expiration set to Date
+    polarion-id: CEPH-11185
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_date.yaml
+- test:
+    name: object expiration for delete marker set
+    desc: Test object expiration for delete marker set
+    polarion-id: CEPH-11189
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_delete_marker.yaml
+- test:
+    name: LC process with versioning suspended bucket
+    desc: LC process with versioning suspended bucket
+    polarion-id: CEPH-83574809
+    module: sanity_rgw.py
+    config:
+      test-version: v2
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_process_with_versioning_suspended.yaml
+- test:
+    name: Test LC transition without rule by lc process
+    desc: Test LC transition without rule by lc process
+    polarion-id: CEPH-83574044
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_process_without_applying_rule.yaml
+- test:
+    name: Test single delete marker for versioned object using LC
+    desc: Test single delete marker for versioned object using LC
+    polarion-id: CEPH-83574806
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_multiple_delete_marker.yaml
+- test:
+    name: object expiration for versioned buckets with filter Prefix test multiple rules.
+    desc: Test object expiration for versioned buckets with filter 'Prefix', test multiple rules.
+    polarion-id: CEPH-11177
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_multiple_rule_prefix_current_days.yaml
+- test:
+    name: notify on lifecycle expiration delete marker
+    desc: notify on lifecycle expiration delete marker
+    polarion-id: CEPH-83575583
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_delete_marker_notifications.yaml
+- test:
+    name: notify on lifecycle expiration events
+    desc: notify on lifecycle expiration events
+    polarion-id: CEPH-83575583
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_expiration_notifications.yaml
+- test:
+    name: notify on lifecycle expiration with parallel lc processing
+    desc: notify on lifecycle expiration with parallel lc processing
+    polarion-id: CEPH-83575583
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_expiration_parallel_notifications.yaml
+- test:
+    name: notify on lifecycle expiration non current objects with prefix rule
+    desc: notify on lifecycle expiration non current objects with prefix rule
+    polarion-id: CEPH-83575583
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_prefix_non_current_days_notifications.yaml
+- test:
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_with_prefix_dot.yaml
+    desc: test lc with prefix containing dot
+    module: sanity_rgw.py
+    name: test lc with prefix containing dot
+    polarion-id: CEPH-11192
+- test:
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_with_prefix_hyphen.yaml
+    desc: test lc with prefix containing hyphen
+    module: sanity_rgw.py
+    name: test lc with prefix containing hyphen
+    polarion-id: CEPH-11192
+- test:
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_with_prefix_slash.yaml
+    desc: test lc with prefix containing slash
+    module: sanity_rgw.py
+    name: test lc with prefix containing slash
+    polarion-id: CEPH-11192
+- test:
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_with_prefix_underscore.yaml
+    desc: test lc with prefix containing underscore
+    module: sanity_rgw.py
+    name: test lc with prefix containing underscore
+    polarion-id: CEPH-11192
+- test:
+    name: test lifecycle expiration with dynamic resharding
+    desc: test lifecycle expiration with dynamic resharding
+    polarion-id: CEPH-83574679
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_expiration_dynamic_reshard.yaml
+- test:
+    name: test lifecycle expiration with manual resharding and Test if LC policy is applied via lc list and lc get
+    desc: test lifecycle expiration with manual resharding and Test if LC policy is applied via lc list and lc get
+    polarion-id: CEPH-83574042
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_expiration_manual_reshard.yaml
+- test:
+    name: lifecycle with version enabled bucket containing only one object version
+    desc: Test lifecycle with version enabled bucket containing only one object version
+    polarion-id: CEPH-11187
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_current_version_object_expiration.yaml
+- test:
+    name: Bucket setlifeycle with invalid date in LC conf
+    desc: Setlifeycle to bucket with invalid date format in Lifecycle configuration
+    polarion-id: CEPH-11186
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_invalid_date.yaml
+- test:
+    name: Control functionality for RGW lifecycle
+    desc: Control functionality for RGW lifecycle with rgw_enable_lc_threads
+    polarion-id: CEPH-83575046
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_rgw_enable_lc_threads.yaml
+- test:
+    name: test bucket lc rule conflict between expiration days
+    desc: test bucket lc rule conflict between expiration days
+    polarion-id: CEPH-11184
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_conflict_exp_days.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket lc rules with same ruleid but different rules
+    desc: test bucket lc rules with same ruleid but different rules
+    polarion-id: CEPH-11183
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_object_expiration_transition.py
+      config-file-name: test_lc_rule_same_rule_id_diff_rules.yaml
+      run-on-haproxy: true
+- test:
+    name: Test non current deletion via s3cmd
+    desc: Test non current deletion via s3cmd
+    polarion-id: CEPH-83573543
+    module: sanity_rgw.py
+    config:
+      script-name: ../s3cmd/test_lifecycle_s3cmd.py
+      config-file-name: ../../s3cmd/configs/test_lc_expiration_noncurrent_when_current_object_deleted_via_s3cmd.yaml
+- test:
+    config:
+      script-name: test_manual_lc_process_single_bucket.py
+      config-file-name: test_lc_process_single_bucket_expired.yaml
+    desc: test LC process for a single bucket with expired objects
+    module: sanity_rgw.py
+    name: Test LC process for single bucket expired
+    polarion-id: CEPH-83574809
+- test:
+    config:
+      script-name: test_manual_lc_process_single_bucket.py
+      config-file-name: test_lc_process_single_bucket_nonexpired.yaml
+    desc: test LC process for a single bucket with non expired objects
+    module: sanity_rgw.py
+    name: Test LC process for single bucket non-expired
+    polarion-id: CEPH-83574809
+- test:
+    name: notify on lifecycle expiration events with upload type multipart
+    desc: notify on lifecycle expiration events with upload type multipart
+    polarion-id: CEPH-83575583
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lc_object_exp_multipart.py
+      config-file-name: test_bucket_lc_object_exp_multipart_notifications.yaml
+- test:
+    name: RGW multipart object expiration through lc
+    desc: RGW multipart object expiration through lc
+    polarion-id: CEPH-83574797
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lc_object_exp_multipart.py
+      config-file-name: test_bucket_lc_object_exp_multipart.yaml
+- test:
+    name: Multipart object expiration through lc
+    desc: Multipart object expiration with lc debug interval 600
+    polarion-id: CEPH-83574803
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lc_object_exp_multipart.py
+      config-file-name: test_bucket_lc_multipart_object_expiration.yaml

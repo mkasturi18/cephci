@@ -1,0 +1,211 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: test basic object operations with swift
+    desc: Test basic object operations with swift
+    polarion-id: CEPH-11019
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_basic_ops.yaml
+      run-on-rgw: true
+- test:
+    name: test swift enable version on conatainer of different user
+    desc: test swift enable version on conatainer of different user
+    polarion-id: CEPH-10650
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_enable_version_with_different_user.yaml
+- test:
+    name: swift versioning tests
+    desc: Test versioned object in swift
+    polarion-id: CEPH-10640
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_versioning.yaml
+- test:
+    name: swift versioning copy tests
+    desc: restore versioned object in swift
+    polarion-id: CEPH-10646
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_version_copy_op.yaml
+- test:
+    name: swift object expire tests
+    desc: object expire in swift
+    polarion-id: CEPH-9718
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_object_expire_op.yaml
+- test:
+    name: Swift user with read access
+    desc: Swift user with read access
+    polarion-id: CEPH-9220
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_user_access_read.yaml
+- test:
+    name: Swift user with write access
+    desc: Swift user with read access
+    polarion-id: CEPH-9220
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_user_access_write.yaml
+- test:
+    name: Swift user with readwrite access
+    desc: Swift user with read access
+    polarion-id: CEPH-9220
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_user_access_readwrite.yaml
+- test:
+    name: swift upload large object tests
+    desc: upload large object in swift
+    polarion-id: CEPH-9808
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_large_upload.yaml
+- test:
+    name: swift download large object tests
+    desc: download large object in swift
+    polarion-id: CEPH-9809
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_large_download.yaml
+- test:
+    name: Get object with different tenant swift user with same name
+    desc: test get object with different tenant swift user with same name
+    polarion-id: CEPH-9744
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_get_objects_from_tenant_swift_user.yaml
+- test:
+    name: delete container with different tenant swift user with same name
+    desc: test delete container with different tenant swift user with same name
+    polarion-id: CEPH-9749
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_delete_container_from_user_of_diff_tenant.yaml
+- test:
+    name: upload large object with same name using tenant swift user
+    desc: test upload large object with same name using tenant swift user
+    polarion-id: CEPH-9814
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_upload_large_obj_with_same_obj_name.yaml
+- test:
+    name: Test the swift URL at root
+    desc: Test the swift URL at root
+    polarion-id: CEPH-83572699
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_swift_at_root.yaml
+- test:
+    name: swift enabling versioning on a bucket that is S3 versioned
+    desc: test swift enabling versioning on a bucket that is S3 versioned
+    polarion-id: CEPH-10649
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_basic_ops.py
+      config-file-name: test_s3_and_swift_versioning.yaml
+- test:
+    name: test keystone acl with RGW
+    desc: test keystone acl with RGW
+    polarion-id: CEPH-83572657
+    module: sanity_rgw.py
+    config:
+      install_keystone_ldap: true
+      script-name: ../s3_swift/test_swift_acl_with_keystone.py
+      config-file-name: ../../s3_swift/configs/test_swift_acl_with_keystone.yaml
+- test:
+    name: Swift bulk delete operation
+    desc: Swift bulk delete operation
+    polarion-id: CEPH-9753
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_bulk_delete.py
+      config-file-name: test_swift_bulk_delete.yaml
+- test:
+    name: Test swift bulk upload with tar format
+    desc: Test swift bulk upload with tar format
+    polarion-id: CEPH-83607707
+    module: sanity_rgw.py
+    config:
+      script-name: test_swift_bulk_upload.py
+      config-file-name: test_swift_bulk_upload.yaml
+- test:
+    name: test swift stats command for more than 1000 buckets
+    desc: test swift stats command for more than 1000 buckets
+    polarion-id: CEPH-83573506
+    module: sanity_rgw.py
+    config:
+      script-name: swift_stats.py
+      config-file-name: swift_stats.yaml
+- test:
+    name: test swift static large object expiration
+    desc: test swift static large object expiration
+    polarion-id: CEPH-9726
+    module: sanity_rgw.py
+    config:
+      script-name: ../s3_swift/test_swift_static_large_object_expiration.py
+      config-file-name: ../../s3_swift/configs/test_swift_slo_expiry.yaml

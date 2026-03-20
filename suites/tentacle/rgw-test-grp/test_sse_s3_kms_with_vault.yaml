@@ -1,0 +1,97 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_bucket_encryption_normal_object_upload.yaml
+    desc: test_sse_s3_per_bucket_encryption_normal_object_upload
+    module: sanity_rgw.py
+    name: sse-s3 per bucket encryption test on a regular bucket
+    polarion-id: CEPH-83574619
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_object.yaml
+    desc: test_sse_s3_per_object_encryption
+    module: sanity_rgw.py
+    name: sse-s3 per object encryption test on a regular bucket
+    polarion-id: CEPH-83574040
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_bucket_encryption_version_enabled.yaml
+    desc: test_sse_s3_per_bucket_encryption_version_enabled after upgrade
+    module: sanity_rgw.py
+    name: sse-s3 per bucket encryption test on a versiond bucket after upgrade
+    polarion-id: CEPH-83575152
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_bucket_encryption_normal_object_upload.yaml
+    desc: test_sse_s3_per_bucket_encryption_normal_object_upload
+    module: sanity_rgw.py
+    name: sse-s3 per bucket encryption test
+    polarion-id: CEPH-83574615
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_bucket_encryption_normal_object_upload.yaml
+    desc: test sse-s3 per bucket encryption pre upgrade
+    module: sanity_rgw.py
+    name: sse-s3 per bucket encryption test pre upgrade
+    polarion-id: CEPH-83574615
+- test:
+    config:
+      script-name: test_sse_s3_kms_with_vault.py
+      config-file-name: test_sse_s3_per_bucket_encryption_multipart_object_upload.yaml
+    module: sanity_rgw.py
+    desc: test sse-s3 per bucket encryption with multipart post upgrade
+    name: test sse-s3 per bucket encryption with multipart post upgrade
+    polarion-id: CEPH-83575155

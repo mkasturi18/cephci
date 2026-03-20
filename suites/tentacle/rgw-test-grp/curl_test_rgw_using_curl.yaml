@@ -1,0 +1,81 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Test rgw through CURL
+    desc: Test rgw through CURL
+    polarion-id: CEPH-83575572
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_rgw_using_curl.py
+      config-file-name: ../../curl/configs/test_rgw_using_curl.yaml
+- test:
+    name: Test rgw multipart upload through curl
+    desc: Test rgw multipart upload through curl
+    polarion-id: CEPH-9801
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_rgw_using_curl.py
+      config-file-name: ../../curl/configs/test_rgw_curl_multipart_upload.yaml
+- test:
+    name: Test rgw put object through curl using transfer_encoding chunked
+    desc: Test rgw put object through curl using transfer_encoding chunked
+    polarion-id: CEPH-83575572
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_rgw_using_curl.py
+      config-file-name: ../../curl/configs/test_curl_transfer_encoding_chunked.yaml
+- test:
+    name: Test rgw user capability user-info-without-keys using curl
+    desc: Test rgw user capability user-info-without-keys using curl
+    polarion-id: CEPH-83582351
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_rgw_using_curl.py
+      config-file-name: ../../curl/configs/test_rgw_user_cap_user_info_without_keys.yaml

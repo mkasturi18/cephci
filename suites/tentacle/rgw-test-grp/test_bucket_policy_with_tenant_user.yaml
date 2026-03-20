@@ -1,0 +1,110 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Add a lifecycle configuration to a bucket with tenant user
+    desc: Apply lc configuration to bucket with tenant user and perform get lc with other users of tenant
+    polarion-id: CEPH-11206
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_bucket_put_get_lifecycle_configuration_with_tenant_users.yaml
+- test:
+    name: GetBucketLocation with bucket policy for users in same tenant
+    desc: Test GetBucketLocation bucket policy for users in same tenant
+    polarion-id: CEPH-11623
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_bucketlocation_using_bucketpolicy_with_tenantuser.yaml
+- test:
+    name: Test BucketNotification with users in same tenant and different tenant
+    desc: BucketNotification with users in same tenant and different tenant
+    polarion-id: CEPH-11204
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      extra-pkgs:
+      - jdk
+      install_start_kafka: true
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_put_get_bucket_notification_with_tenant_same_and_different_user.yaml
+- test:
+    name: Test rgw put bucket website with users of same and different tenant
+    desc: Test rgw put bucket website with users of same and different tenant
+    polarion-id: CEPH-11148
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_put_bucket_website_with_tenant_same_and_different_user.yaml
+- test:
+    name: Test rgw get bucket website with users of same and different tenant
+    desc: Test rgw get bucket website with users of same and different tenant
+    polarion-id: CEPH-11150
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_get_bucket_website_with_tenant_same_and_different_user.yaml
+- test:
+    name: ListBucketVersions with bucket policy for users in same tenant
+    desc: Test ListBucketVersions bucket policy for users in same tenant
+    polarion-id: CEPH-11574
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: test_listbucketversion_with_bucketpolicy_for_tenant_user.yaml
+- test:
+    name: Get object and its version from same and different tenant users
+    desc: test get object and its version from same and different tenant users
+    polarion-id: CEPH-11516
+    module: sanity_rgw.py
+    config:
+      test-version: v2
+      script-name: test_bucket_policy_with_tenant_user.py
+      config-file-name: get_object_and_its_versions_tenat_user.yaml

@@ -1,0 +1,156 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: STS Tests to perform assume role call with permissive session policies
+    desc: Perform assume role call with permissive session policies
+    polarion-id: CEPH-83574491
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_permissive_session_policy.yaml
+- test:
+    name: STS Tests to perform assume role call with restrictive session policies
+    desc: Perform assume role call with restrictive session policies
+    polarion-id: CEPH-83574492
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_restricted_session_policy.yaml
+- test:
+    name: STS test to verify session policy allow actions
+    desc: STS test to verify session policy allow actions
+    polarion-id: CEPH-83593390
+    module: sanity_rgw.py
+    config:
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_verify_session_policy_allow_actions.yaml
+- test:
+    name: STS test to verify session policy deny actions
+    desc: STS test to verify session policy deny actions
+    polarion-id: CEPH-83593390
+    module: sanity_rgw.py
+    config:
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_verify_session_policy_deny_actions.yaml
+- test:
+    name: STS test to verify session policy allow put object and deny abort_multipart_upload
+    desc: STS test to verify session policy allow put object and deny abort_multipart_upload
+    polarion-id: CEPH-83593390
+    comments: Known issue BZ-2302541 targeted to 9.0
+    module: sanity_rgw.py
+    config:
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_verify_session_policy_allow_put_object_and_deny_abort_multipart.yaml
+- test:
+    name: STS test to verify session policy deny sns topic actions
+    desc: STS test to verify session policy deny sns topic actions
+    polarion-id: CEPH-83593390
+    comments: Known issue BZ-2293233 targeted to 9.0
+    module: sanity_rgw.py
+    config:
+      script-name: test_sts_using_boto_session_policy.py
+      config-file-name: test_sts_using_boto_verify_session_policy_deny_sns_topic_actions.yaml
+- test:
+    name: STS Tests to perform assume role on principle user and perform IOs
+    desc: Perform assume role on principle user and perform IOs
+    polarion-id: CEPH-83572938
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      test-version: v2
+      script-name: test_sts_using_boto.py
+      config-file-name: test_sts_using_boto.yaml
+- test:
+    name: STS Tests to perform assume role on principle user and perform IOs
+    desc: Perform assume role on principle user and perform IOs
+    polarion-id: CEPH-83572938
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      test-version: v2
+      script-name: test_sts_using_boto.py
+      config-file-name: test_sts_using_boto.yaml
+- test:
+    name: STS test with invalid arn in the role's policy
+    desc: STS test with invalid arn in the role's policy
+    polarion-id: CEPH-83574537
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_sts_using_boto.py
+      config-file-name: test_sts_using_boto_invalid_arn_policy.yaml
+- test:
+    name: STS test with invalid principal in the role's policy
+    desc: STS test with invalid principal in the role's policy
+    polarion-id: CEPH-83574449
+    module: sanity_rgw.py
+    config:
+      script-name: test_sts_using_boto.py
+      config-file-name: test_sts_invalid_principal.yaml
+- test:
+    name: STS Tests to perform Server Side Copy
+    desc: Perform Server Side Copy
+    polarion-id: CEPH-83574522
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_sts_using_boto_server_side_copy.py
+      config-file-name: test_sts_using_boto_server_side_copy.yaml
+- test:
+    name: STS Tests for handling non-existent object condition
+    desc: STS test using boto for handling non-existent object condition
+    polarion-id: CEPH-83574539
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_sts_using_boto_unexisting_object.py
+      config-file-name: test_sts_using_boto.yaml

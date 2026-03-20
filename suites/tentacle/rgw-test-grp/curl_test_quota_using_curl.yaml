@@ -1,0 +1,73 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Test rgw bucket quota using CURL
+    desc: Test rgw bucket quota using CURL
+    polarion-id: CEPH-83575572
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_quota_using_curl.py
+      config-file-name: ../../curl/configs/test_quota_mgmt_bucket_quota_using_curl.yaml
+- test:
+    name: Test rgw user quota using CURL
+    desc: Test rgw user quota using CURL
+    polarion-id: CEPH-83575572
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_quota_using_curl.py
+      config-file-name: ../../curl/configs/test_quota_mgmt_user_quota_using_curl.yaml
+- test:
+    name: Test rgw bucket quota conflict using CURL
+    desc: Test rgw bucket quota conflict using CURL
+    polarion-id: CEPH-83575572
+    module: sanity_rgw.py
+    config:
+      script-name: ../curl/test_quota_using_curl.py
+      config-file-name: ../../curl/configs/test_quota_mgmt_conflict_bucket_quota_using_curl.yaml

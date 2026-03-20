@@ -1,0 +1,331 @@
+tests:
+  - test:
+      abort-on-fail: true
+      desc: Install software pre-requisites for cluster deployment.
+      module: install_prereq.py
+      name: setup pre-requisites
+  - test:
+      abort-on-fail: true
+      config:
+        verify_cluster_health: true
+        steps:
+          - config:
+              command: bootstrap
+              service: cephadm
+              args:
+                registry-url: registry.redhat.io
+                mon-ip: node1
+                initial-dashboard-password: admin@123
+                dashboard-password-noupdate: true
+                orphan-initial-daemons: true
+                skip-monitoring-stack: true
+          - config:
+              command: add_hosts
+              service: host
+              args:
+                attach_ip_address: true
+                labels: apply-all-labels
+          - config:
+              command: apply
+              service: osd
+              args:
+                all-available-devices: true
+          - config:
+              args:
+                - "ceph osd erasure-code-profile set rgw_ec22_4 k=2 m=2"
+                - "crush-failure-domain=host crush-device-class=hdd"
+              command: shell
+          - config:
+              args:
+                - "ceph osd pool create primary.rgw.buckets.data 32 32"
+                - "erasure rgw_ec22_4"
+              command: shell
+          - config:
+              args:
+                - "ceph osd pool application enable"
+                - "default.rgw.buckets.data rgw"
+          - config:
+              command: apply
+              service: rgw
+              pos_args:
+              - rgw.1
+              args:
+                placement:
+                  label: rgw
+                  nodes:
+                  - node3
+                  - node4
+      desc: bootstrap with registry-url option and deployment services.
+      destroy-cluster: false
+      polarion-id: CEPH-83573713
+      module: test_cephadm.py
+      name: RHCS deploy cluster using cephadm
+  - test:
+      abort-on-fail: true
+      config:
+        command: add
+        id: client.1
+        node: node4
+        install_packages:
+          - ceph-common
+        copy_admin_keyring: true
+      desc: Configure the RGW client system
+      polarion-id: CEPH-83573758
+      destroy-cluster: false
+      module: test_client.py
+      name: configure client
+# configuring HAproxy on the client node 'node4' and port '5000'
+  - test:
+      abort-on-fail: true
+      config:
+        haproxy_clients:
+          - node4
+        rgw_endpoints:
+          - node3:80
+          - node4:80
+      desc: "Configure HAproxy"
+      module: haproxy.py
+      name: "Configure HAproxy"
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects.yaml
+      desc: test to create "M" no of buckets and "N" no of objects
+      module: sanity_rgw.py
+      name: Test M buckets with N objects
+      polarion-id: CEPH-9789
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_delete.yaml
+      desc: test to create "M" no of buckets and "N" no of objects with delete
+      module: sanity_rgw.py
+      name: Test delete using M buckets with N objects
+      polarion-id: CEPH-14237
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_multipart.yaml
+      desc: test to create "M" no of buckets and "N" no of objects with multipart upload
+      module: sanity_rgw.py
+      name: Test multipart upload of M buckets with N objects
+      polarion-id: CEPH-9801
+  - test:
+      name: Test GetObjectAttributes with normal objects
+      desc: Test GetObjectAttributes with normal objects
+      polarion-id: CEPH-83595849
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_get_object_attributes.yaml
+  - test:
+      name: Test GetObjectAttributes with checksum sha256
+      desc: Test GetObjectAttributes with checksum sha256
+      polarion-id: CEPH-83595849
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_get_object_attributes_checksum_sha256.yaml
+  - test:
+      name: Test GetObjectAttributes with multipart objects
+      desc: Test GetObjectAttributes with multipart objects
+      polarion-id: CEPH-83595849
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_get_object_attributes_multipart.yaml
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_multipart.yaml
+      desc: test to create "M" no of buckets and "N" no of objects with multipart upload
+      module: sanity_rgw.py
+      name: Test multipart upload of M buckets with N objects
+      polarion-id: CEPH-9801
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_download.yaml
+        run-on-haproxy: true
+      desc: test to create "M" no of buckets and "N" no of objects with download
+      module: sanity_rgw.py
+      name: Test download with M buckets with N objects
+      polarion-id: CEPH-14237
+  - test:
+      name: Test GetObjectAttributes with checksum sha256
+      desc: Test GetObjectAttributes with checksum sha256
+      polarion-id: CEPH-83595849
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_get_object_attributes_checksum_sha256.yaml
+  - test:
+      name: Test GetObjectAttributes with multipart objects
+      desc: Test GetObjectAttributes with multipart objects
+      polarion-id: CEPH-83595849
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_get_object_attributes_multipart.yaml
+  - test:
+      name: compresstion_with_zstd_type
+      desc: test compresstion with zstd type
+      polarion-id: CEPH-11350
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_compression_zstd.yaml
+        run-on-haproxy: true
+  - test:
+      name: compresstion_with_snappy_type
+      desc: test compresstion with snappy type
+      polarion-id: CEPH-11350
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_compression_snappy.yaml
+        run-on-haproxy: true
+  - test:
+      name: compresstion_with_Zlib_type
+      desc: test compresstion with Zlib
+      polarion-id: CEPH-11350
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_compression.yaml
+        run-on-haproxy: true
+  - test:
+      name: Mbuckets_with_Nobjects with etag verification pre upgrade
+      desc: test etag verification
+      module: sanity_rgw.py
+      polarion-id: CEPH-83574871
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_etag.yaml
+        run-on-haproxy: true
+  - test:
+      name: Mbuckets_with_Nobjects with etag verification post upgrade
+      desc: test etag verification
+      module: sanity_rgw.py
+      polarion-id: CEPH-83574871
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_etag.yaml
+        run-on-haproxy: true
+  - test:
+      name: Mbuckets_with_Nobjects with etag verification pre upgrade
+      desc: test etag verification
+      module: sanity_rgw.py
+      polarion-id: CEPH-83574871
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_etag.yaml
+        run-on-haproxy: true
+  - test:
+      name: Mbuckets_with_Nobjects with etag verification pre upgrade
+      desc: test etag verification
+      module: sanity_rgw.py
+      polarion-id: CEPH-83574871
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_etag.yaml
+  - test:
+      name: compression_with_zstd_type pre upgrade
+      desc: test compression with zstd type pre upgrade
+      polarion-id: CEPH-11350
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_compression_zstd.yaml
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects.yaml
+      desc: test to create "M" no of buckets and "N" no of objects
+      module: sanity_rgw.py
+      name: Test M buckets with N objects
+      polarion-id: CEPH-9789
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_delete.yaml
+      desc: test to create "M" no of buckets and "N" no of objects with delete
+      module: sanity_rgw.py
+      name: Test delete using M buckets with N objects
+      polarion-id: CEPH-14237
+  - test:
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_download.yaml
+        run-on-haproxy: true
+      desc: test to create "M" no of buckets and "N" no of objects with download
+      module: sanity_rgw.py
+      name: Test download with M buckets with N objects
+      polarion-id: CEPH-14237
+  - test:
+      name: test bi purge for a bucket
+      desc: test bi purge should not error
+      module: sanity_rgw.py
+      polarion-id: CEPH-83575234
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_bi_purge.yaml
+  - test:
+      name: Test bi put with incomplete multipart upload
+      desc: Test bi put with incomplete multipart upload
+      polarion-id: CEPH-83574876
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_bi_put_with_incomplete_multipart_upload.yaml
+  - test:
+      name: Test Tags added during multipart upload are retrievable
+      desc: Test Tags added during multipart upload are retrievable
+      polarion-id: CEPH-83604857
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_multipart_upload_with_tagging.yaml
+  - test:
+      name: Mbuckets_with_Nobjects with etag verification pre upgrade
+      desc: test etag verification
+      module: sanity_rgw.py
+      polarion-id: CEPH-83574871
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_etag.yaml
+        run-on-haproxy: true
+  - test:
+      name: Test functionality of bucket check fix
+      desc: Test functionality of bucket check fix
+      polarion-id: CEPH-83574832
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_bucket_check_fix.yaml
+  - test:
+      name: Test functionality of user stat reset
+      desc: Test functionality of user stat reset
+      polarion-id: CEPH-83575439
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_user_stats_reset.yaml
+  - test:
+      name: reshard cancel command
+      desc: reshard cancel command
+      polarion-id: CEPH-11474
+      module: sanity_rgw.py
+      config:
+        run-on-rgw: true
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_reshard_cancel_cmd.yaml
+  - test:
+      name: test mpu race after gc kicks in 
+      desc: complete and abort multipart upload race causes obj download failure after gc kicks in
+      polarion-id: CEPH-83604471
+      module: sanity_rgw.py
+      config:
+        script-name: test_Mbuckets_with_Nobjects.py
+        config-file-name: test_Mbuckets_with_Nobjects_multipart_upload_complete_abort_race.yaml
+

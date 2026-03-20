@@ -1,0 +1,211 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Multipart upload with Bucket policy enabled
+    desc: Perform multipart upload with Bucket policy enabled
+    polarion-id: CEPH-83574538
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_with_multipart_upload.yaml
+- test:
+    name: test bucket policy with multiple statements
+    desc: test bucket policy with multiple statements
+    polarion-id: CEPH-11216
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_multiple_statements.yaml
+- test:
+    name: test bucket policy with conflicting statements
+    desc: test bucket policy with conflicting statements
+    polarion-id: CEPH-11217
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_multiple_conflicting_statements.yaml
+- test:
+    name: test bucket policy with condition blocks
+    desc: test bucket policy with condition blocks
+    polarion-id: CEPH-11589
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_condition.yaml
+- test:
+    name: test bucket policy condition block with explicit deny
+    desc: test bucket policy condition block with explicit deny
+    polarion-id: CEPH-11590
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_condition_explicit_deny.yaml
+- test:
+    name: test bucket policy deny actions
+    desc: test bucket policy deny actions
+    polarion-id: CEPH-11216
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_deny_actions.yaml
+- test:
+    name: test public access block pre bucket policy
+    desc: test public access block pre bucket policy
+    polarion-id: CEPH-83575582
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_public_access_block_pre_bucket_policy.yaml
+- test:
+    name: test public access block post bucket policy
+    desc: test public access block post bucket policy
+    polarion-id: CEPH-83575582
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_public_access_block_post_bucket_policy.yaml
+- test:
+    name: test public access block BlockPublicAcls
+    desc: test public access block BlockPublicAcls
+    polarion-id: CEPH-83575582
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_public_access_block_acl.yaml
+- test:
+    name: test public access block IgnorePublicAcls
+    desc: test public access block IgnorePublicAcls
+    polarion-id: CEPH-83575582
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_public_access_block_ignore_acl.yaml
+- test:
+    name: test public access block RestrictPublicBuckets
+    desc: test public access block RestrictPublicBuckets
+    polarion-id: CEPH-83575582
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_public_access_block_restricted_public_buckets.yaml
+    comments: known issue - Bug 2344730 targetted to 9.0
+- test:
+    name: Multipart upload with Bucket policy enabled
+    desc: Perform multipart upload with Bucket policy enabled
+    polarion-id: CEPH-83574538
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_with_multipart_upload.yaml
+- test:
+    name: test bucket policy with invalid action
+    desc: test bucket policy with invalid action
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_action.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid conditional in condition blocks
+    desc: test bucket policy with invalid conditional in condition blocks
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_condition_key.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid effect
+    desc: test bucket policy with invalid effect
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_effect.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid key
+    desc: test bucket policy with invalid key
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_key.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid principal
+    desc: test bucket policy with invalid principal
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_principal.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid resource
+    desc: test bucket policy with invalid resource
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_resource.yaml
+      run-on-haproxy: true
+- test:
+    name: test bucket policy with invalid version
+    desc: test bucket policy with invalid version
+    polarion-id: CEPH-83572755
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_policy_ops.py
+      config-file-name: test_bucket_policy_invalid_version.yaml
+      run-on-haproxy: true

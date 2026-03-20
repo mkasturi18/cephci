@@ -1,0 +1,114 @@
+tests:
+- test:
+    abort-on-fail: true
+    desc: Install software pre-requisites for cluster deployment.
+    module: install_prereq.py
+    name: setup pre-requisites
+- test:
+    abort-on-fail: true
+    config:
+      verify_cluster_health: true
+      steps:
+      - config:
+          command: bootstrap
+          service: cephadm
+          args:
+            registry-url: registry.redhat.io
+            mon-ip: node1
+            initial-dashboard-password: admin@123
+            dashboard-password-noupdate: true
+            orphan-initial-daemons: true
+            skip-monitoring-stack: true
+      - config:
+          command: add_hosts
+          service: host
+          args:
+            attach_ip_address: true
+            labels: apply-all-labels
+      - config:
+          command: apply
+          service: osd
+          args:
+            all-available-devices: true
+      - config:
+          command: apply
+          service: rgw
+          pos_args:
+          - rgw.1
+          args:
+            placement:
+              label: rgw
+              nodes:
+              - node3
+              - node4
+              - node5
+    desc: bootstrap with registry-url option and deployment services.
+    destroy-cluster: false
+    polarion-id: CEPH-83573713
+    module: test_cephadm.py
+    name: RHCS deploy cluster using cephadm
+- test:
+    name: Bucket Lifecycle expiration of incomplete multipart
+    desc: Bucket Lifecycle expiration of incomplete multipart
+    polarion-id: CEPH-11195
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lc_incomplete_multipart.yaml
+- test:
+    name: Read lifecycle configuration on a given bucket
+    desc: Read lifecycle configuration on a given bucket
+    polarion-id: CEPH-11181
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lifecycle_config_read.yaml
+- test:
+    name: lifecycle with version enabled bucket containing multiple object versions
+    desc: Test lifecycle with version enabled bucket containing multiple object versions
+    polarion-id: CEPH-11188
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lifecycle_config_versioning.yaml
+- test:
+    name: Disable lifecycle configuration on a given bucket
+    desc: Disable lifecycle configuration on a given bucket
+    polarion-id: CEPH-11191
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lifecycle_config_disable.yaml
+- test:
+    name: Modify lifecycle configuration on a given bucket
+    desc: Modify lifecycle configuration on a given bucket
+    polarion-id: CEPH-11120
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lifecycle_config_modify.yaml
+- test:
+    name: Enable lifecycle and disable it on a bucket before objects expires
+    desc: Enable lifecycle and disable it on a bucket before the objects get expired
+    polarion-id: CEPH-11196
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lc_disable_object_exp.yaml
+- test:
+    name: Add a new lifecycle configuration to a bucket
+    desc: Apply lc configuration to bucket which already has lc configuration set
+    polarion-id: CEPH-11199
+    module: sanity_rgw.py
+    config:
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_add_new_lc_to_bucket.yaml
+- test:
+    name: LC enabled on bucket removes pre and post uploaded objects
+    desc: Bucket in which LC is enabled should delete object existed and objects added in future
+    polarion-id: CEPH-11197
+    module: sanity_rgw.py
+    config:
+      run-on-rgw: true
+      script-name: test_bucket_lifecycle_config_ops.py
+      config-file-name: test_bucket_lc_enable_object_exp.yaml
