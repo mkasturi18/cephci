@@ -10,10 +10,10 @@ import traceback
 from copy import deepcopy
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from ipaddress import ip_address
 from string import ascii_uppercase, digits
 from typing import Any, Dict, Optional, Tuple
 from urllib import request
+from ipaddress import IPv4Network, ip_address
 
 import requests
 import yaml
@@ -2923,3 +2923,116 @@ def setup_gklm_prereq(ceph_cluster, cloud_type, custom_config):
     client_node.exec_command(sudo=True, cmd="ceph orch apply -i /root/rgw_spec.yaml")
     log.info("sleeping for 20 seconds")
     time.sleep(20)
+
+def get_next_available_ip(node, retry=5):
+    """
+    Identify the IPv4 address and subnet on the given client node, then find
+    the next available (pingable-free) IP in the same subnet, excluding the
+    network address, broadcast address, the node's own IP, and the default gateway.
+
+    Args:
+        node: CephNode object on which commands are executed.
+        retry: Number of ping attempts per IP to confirm it is unreachable.
+               Defaults to 5.
+
+    Returns:
+        str: The next available IPv4 address in the subnet.
+
+    Raises:
+        RuntimeError: If the IPv4 address/subnet or default gateway cannot
+                      be determined on the node, or no free IP is found.
+    """
+    node.reconnect()
+    log.info(f"SSH connection established to node {node.ip_address}")
+
+    out, _ = node.exec_command(
+        sudo=True,
+        cmd="ip -4 route show default",
+    )
+    if not out.strip():
+        raise RuntimeError("Unable to determine the default route on the node")
+
+    parts = out.strip().split()
+    gateway_ip = parts[2]
+    default_iface = parts[4]
+    log.info(f"Default gateway: {gateway_ip}, interface: {default_iface}")
+
+    out, _ = node.exec_command(
+        sudo=True,
+        cmd=f"ip -4 -o addr show dev {default_iface} | awk '{{print $4}}'",
+    )
+    cidr = out.strip().splitlines()[0].strip()
+    if not cidr:
+        raise RuntimeError(
+            f"Unable to determine IPv4 address on interface {default_iface}"
+        )
+
+    node_ip, prefix_length = cidr.split("/")
+    network = IPv4Network(cidr, strict=False)
+    log.info(f"Node IP: {node_ip}, Subnet: {network}")
+
+    excluded = {ip_address(node_ip), ip_address(gateway_ip)}
+
+    for host_ip in network.hosts():
+        if host_ip in excluded:
+            continue
+
+        for attempt in range(1, retry + 1):
+            out, _ = node.exec_command(
+                sudo=True,
+                cmd=f"ping -c 1 -W 1 {host_ip}",
+                check_ec=False,
+            )
+            if "1 received" in out:
+                log.debug(
+                    f"{host_ip} responded to ping on attempt {attempt}/{retry}"
+                )
+                break
+        else:
+            log.info(f"Next available IP in subnet {network}: {host_ip}/{prefix_length}")
+            return str(host_ip), prefix_length
+
+    raise RuntimeError(f"No available IP found in subnet {network}")
+
+def get_ingress_vip(node):
+    """
+    Export the ingress service spec and return the virtual IP.
+
+    Runs ``ceph orch ls --service-type ingress --export`` on the node,
+    writes the output to ``/tmp/rgw_ingress.yaml``, parses it, and
+    extracts the ``virtual_ip`` field.
+
+    Args:
+        node: CephNode object on which commands are executed.
+        service_name: Optional service name to filter
+                      (e.g. "ingress.rgw.rgw1"). When provided the
+                      ``--service-name`` flag is used instead of
+                      ``--service-type``.
+
+    Returns:
+        str: The virtual IP address (without CIDR prefix).
+
+    Raises:
+        RuntimeError: If no ingress spec is found or virtual_ip is absent.
+    """
+    cmd = "ceph orch ls --service-type ingress --export > /tmp/rgw_ingress.yaml"
+
+    node.exec_command(sudo=True, cmd=cmd)
+
+    out, _ = node.exec_command(sudo=True, cmd="cat /tmp/rgw_ingress.yaml")
+    if not out.strip():
+        raise RuntimeError("No ingress service found in ceph orch ls --export output")
+
+    specs = yaml.safe_load(out)
+    if not specs:
+        raise RuntimeError("Ingress spec file is empty after export")
+
+    virtual_ip = specs.get("spec", {}).get("virtual_ip")
+    if not virtual_ip:
+        raise RuntimeError(
+            f"No virtual_ip found in ingress spec: {specs.get('service_name', 'unknown')}"
+        )
+
+    ip = virtual_ip.split("/")[0]
+    log.info(f"Ingress VIP: {ip} (from exported spec: {virtual_ip})")
+    return ip

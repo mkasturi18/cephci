@@ -4,6 +4,7 @@ Contains helper functions that can used across the module.
 
 import json
 import os
+import re
 import tempfile
 from datetime import datetime, timedelta
 from os.path import dirname
@@ -18,7 +19,7 @@ from ceph.ceph import CommandFailed
 from ceph.utils import get_node_by_id, get_nodes_by_ids
 from utility.log import Log
 from utility.ssl_certs import CertificateGenerator
-from utility.utils import generate_self_signed_certificate
+from utility.utils import generate_self_signed_certificate, get_next_available_ip
 
 LOG = Log(__name__)
 
@@ -723,6 +724,15 @@ class GenerateServiceSpec:
         node_names = spec["placement"].pop("nodes", None)
         if node_names:
             spec["placement"]["hosts"] = self.get_hostnames(node_names)
+
+        virtual_ip_val = spec["spec"].get("virtual_ip", "")
+        if isinstance(virtual_ip_val, str) and virtual_ip_val.startswith(
+            "get_floating_ip"
+        ):
+            node = get_node_by_id(self.cluster, "node1")
+            floating_ip, prefix_length = get_next_available_ip(node)
+            spec["spec"]["virtual_ip"] = f"{floating_ip}/{prefix_length}"
+            LOG.info(f"Resolved virtual_ip to {spec['spec']['virtual_ip']}")
 
         if spec["spec"].get("ssl_cert") == "create-cert":
             subject = {

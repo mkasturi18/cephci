@@ -1,0 +1,109 @@
+# conf: conf/tentacle/rgw/rgw_ec_2+2_cluster.yaml
+# suite includes tests with ingress service
+#
+
+tests:
+
+  - test:
+      abort-on-fail: true
+      desc: Install software pre-requisites for cluster deployment.
+      module: install_prereq.py
+      name: setup pre-requisites
+
+  - test:
+      abort-on-fail: true
+      config:
+        verify_cluster_health: true
+        steps:
+          - config:
+              command: bootstrap
+              service: cephadm
+              args:
+                registry-url: registry.redhat.io
+                mon-ip: node1
+                orphan-initial-daemons: true
+                initial-dashboard-password: admin@123
+                dashboard-password-noupdate: true
+                skip-monitoring-stack: true
+          - config:
+              command: add_hosts
+              service: host
+              args:
+                attach_ip_address: true
+                labels: apply-all-labels
+          - config:
+              command: apply
+              service: mon
+              args:
+                placement:
+                  label: mon
+          - config:
+              command: apply
+              service: mgr
+              args:
+                placement:
+                  label: mgr
+          - config:
+              command: apply
+              service: osd
+              args:
+                all-available-devices: true
+          - config:
+              command: apply
+              service: rgw
+              pos_args:
+                - rgw.1
+              args:
+                placement:
+                  label: rgw
+                  nodes:
+                    - node3
+                    - node4
+      desc: RHCS cluster deployment using cephadm.
+      destroy-cluster: false
+      polarion-id: CEPH-83573713
+      module: test_cephadm.py
+      name: deploy cluster
+
+  - test:
+      name: Deploy RGW Ingress daemon with SSL
+      abort-on-fail: true
+      desc: Add RGW and HA Proxy services using spec file.
+      module: test_cephadm.py
+      polarion-id: CEPH-83574609
+      config:
+        steps:
+          - config:
+              command: apply_spec
+              service: orch
+              validate-spec-services: true
+              specs:
+                - service_type: ingress
+                  service_id: rgw.rgw.1
+                  placement:
+                    nodes:
+                      - node3
+                      - node4
+                  spec:
+                    backend_service: rgw.rgw.1
+                    virtual_ip:  get_floating_ip # pick the free floating ip from test env
+                    frontend_port: 443
+                    monitor_port: 1967
+                    ssl: true
+                    certificate_source: cephadm-signed
+  - test:
+      abort-on-fail: true
+      config:
+        command: add
+        id: client.1
+        node: node1
+        install_packages:
+          - ceph-common
+        copy_admin_keyring: true
+        git_clone: true
+        git_node_role: rgw
+      desc: Configure the RGW client system
+      polarion-id: CEPH-83573758
+      destroy-cluster: false
+      module: test_client.py
+      name: configure client
