@@ -1,0 +1,143 @@
+# Focused suite: RGW SSE-KMS with IBM GKLM (KMIP), single-site cluster.
+# conf : conf/tentacle/rgw/tier-0_rgw.yaml
+tests:
+
+  - test:
+      abort-on-fail: true
+      desc: Install software pre-requisites for cluster deployment.
+      module: install_prereq.py
+      name: setup pre-requisites
+
+  - test:
+      abort-on-fail: true
+      config:
+        verify_cluster_health: true
+        steps:
+          - config:
+              command: bootstrap
+              service: cephadm
+              args:
+                registry-url: registry.redhat.io
+                mon-ip: node1
+                orphan-initial-daemons: true
+                initial-dashboard-password: admin@123
+                dashboard-password-noupdate: true
+                skip-monitoring-stack: true
+          - config:
+              command: add_hosts
+              service: host
+              args:
+                attach_ip_address: true
+                labels: apply-all-labels
+          - config:
+              command: apply
+              service: osd
+              args:
+                all-available-devices: true
+          - config:
+              command: apply
+              service: rgw
+              pos_args:
+                - rgw.1
+              args:
+                placement:
+                  label: rgw
+                  nodes:
+                    - node3
+                    - node4
+                    - node5
+      desc: bootstrap with registry-url option and deployment services.
+      destroy-cluster: false
+      polarion-id: CEPH-83573713
+      module: test_cephadm.py
+      name: RHCS deploy cluster using cephadm
+
+  - test:
+      abort-on-fail: true
+      config:
+        command: add
+        id: client.1
+        node: node6
+        install_packages:
+          - ceph-common
+        copy_admin_keyring: true
+        git_clone: true
+        git_node_role: rgw
+      desc: Configure the RGW client system
+      polarion-id: CEPH-83573758
+      destroy-cluster: false
+      module: test_client.py
+      name: configure client
+
+  - test:
+      abort-on-fail: true
+      config:
+        install:
+          - agent
+      desc: Setup and configure vault agent
+      destroy-cluster: false
+      module: install_vault.py
+      name: configure vault agent
+      polarion-id: CEPH-83575226
+
+  - test:
+      abort-on-fail: true
+      config:
+        cephadm: true
+        commands:
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_require_ssl false"
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_sse_s3_backend vault"
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_sse_s3_vault_addr http://127.0.0.1:8100"
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_sse_s3_vault_auth agent"
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_sse_s3_vault_prefix /v1/transit "
+          - "ceph config set client.rgw.{daemon_id:rgw.1} rgw_crypt_sse_s3_vault_secret_engine transit"
+          - "ceph orch restart {service_name:rgw.1}"
+      desc: Setting vault configs for SSE-S3 on RGW
+      module: exec.py
+      name: set sse-s3 vault configs on RGW
+
+  # GKLM (KMIP) SSE-KMS tests
+  - test:
+      config:
+        test-version: v2
+        use-multisite-config-path: true
+        setup_gklm_prerequisites: true
+        script-name: test_sse_s3_kms_with_vault.py
+        config-file-name: test_sse_kms_kmip_gklm_per_bucket_encryption_normal_object_upload.yaml
+      desc: test_sse_kms_kmip_gklm_per_bucket_encryption_normal_object_upload
+      module: sanity_rgw.py
+      name: test_sse_kms_kmip_gklm_per_bucket_encryption_normal_object_upload
+      polarion-id: CEPH-83592485
+
+  - test:
+      config:
+        test-version: v2
+        use-multisite-config-path: true
+        script-name: test_sse_s3_kms_with_vault.py
+        config-file-name: test_sse_kms_kmip_gklm_per_bucket_encryption_multipart_object_upload.yaml
+      desc: test_sse_kms_kmip_gklm_per_bucket_encryption_multipart_object_upload
+      module: sanity_rgw.py
+      name: test_sse_kms_kmip_gklm_per_bucket_encryption_multipart_object_upload
+      polarion-id: CEPH-83592485
+
+  - test:
+      config:
+        test-version: v2
+        use-multisite-config-path: true
+        script-name: test_sse_s3_kms_with_vault.py
+        config-file-name: test_sse_kms_kmip_gklm_per_bucket_encryption_version_enabled.yaml
+      desc: test_sse_kms_kmip_gklm_per_bucket_encryption_version_enabled
+      module: sanity_rgw.py
+      name: test_sse_kms_kmip_gklm_per_bucket_encryption_version_enabled
+      polarion-id: CEPH-83592485
+
+  - test:
+      config:
+        test-version: v2
+        use-multisite-config-path: true
+        script-name: test_sse_s3_kms_with_vault.py
+        config-file-name: test_sse_kms_kmip_gklm_per_object_versioninig_enabled.yaml
+      desc: test_sse_kms_kmip_gklm_per_object_versioninig_enabled
+      module: sanity_rgw.py
+      name: test_sse_kms_kmip_gklm_per_object_versioninig_enabled
+      polarion-id: CEPH-83592485

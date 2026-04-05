@@ -56,6 +56,7 @@ import os
 
 import yaml
 
+from ceph.ceph_admin.helper import check_service_exists
 from utility import utils
 from utility.log import Log
 from utility.utils import (
@@ -64,6 +65,7 @@ from utility.utils import (
     get_cephci_config,
     install_start_kafka,
     setup_cluster_access,
+    setup_gklm_prereq,
 )
 
 log = Log(__name__)
@@ -182,6 +184,20 @@ def run(ceph_cluster, **kw):
     if install_keystone_ldap:
         config_keystone_ldap(rgw_node, cloud_type)
 
+    test_data = kw.get("test_data") or {}
+    custom_config = test_data.get("custom-config", [])
+    setup_gklm_prerequisites = config.get("setup_gklm_prerequisites")
+    if setup_gklm_prerequisites:
+        setup_gklm_prereq(ceph_cluster, cloud_type, custom_config)
+        rgw_status = check_service_exists(
+            ceph_cluster.get_nodes(role="installer")[0],
+            service_type="rgw",
+            interval=10,
+            timeout=180,
+        )
+        if not rgw_status:
+            raise Exception("rgw service restart failed")
+
     out, err = exec_from.exec_command(cmd="ls -l venv", check_ec=False)
     if not out:
         exec_from.exec_command(
@@ -200,6 +216,8 @@ def run(ceph_cluster, **kw):
     test_version = config.get("test-version", "v2")
     script_dir = DIR[test_version]["script"]
     config_dir = DIR[test_version]["config"]
+    if config.get("use-multisite-config-path") and test_version == "v2":
+        config_dir = "/ceph-qe-scripts/rgw/v2/tests/s3_swift/multisite_configs/"
     lib_dir = DIR[test_version]["lib"]
     timeout = config.get("timeout", 3600)
 
