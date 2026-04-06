@@ -76,7 +76,7 @@ tests:
       config:
         run-on-rgw: true
         extra-pkgs:
-          - jdk
+          - java
         git_clone_configs_repo: true
         install_start_kafka: true
         configure_kafka_security: true
