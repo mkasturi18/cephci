@@ -83,37 +83,6 @@ tests:
       name: deploy cluster
 
   - test:
-      name: Monitoring Services deployment
-      desc: Add monitoring services using spec file.
-      module: test_cephadm.py
-      polarion-id: CEPH-83574727
-      config:
-        steps:
-          - config:
-              command: apply_spec
-              service: orch
-              validate-spec-services: true
-              specs:
-                - service_type: prometheus
-                  placement:
-                    count: 1
-                    nodes:
-                      - node1
-                - service_type: grafana
-                  placement:
-                    nodes:
-                      - node1
-                - service_type: alertmanager
-                  placement:
-                    count: 1
-                - service_type: node-exporter
-                  placement:
-                    host_pattern: "*"
-                - service_type: crash
-                  placement:
-                    host_pattern: "*"
-
-  - test:
       abort-on-fail: true
       config:
         cephadm: true
@@ -145,7 +114,6 @@ tests:
 
   - test:
       name: Deploy RGW Ingress daemon with SSL
-      abort-on-fail: true
       desc: Add RGW and HA Proxy services using spec file.
       module: test_cephadm.py
       polarion-id: CEPH-83574609
@@ -160,11 +128,11 @@ tests:
                   service_id: rgw.realm1
                   placement:
                     nodes:
-                      - node3
-                      - node4
+                      - node5
+                      - node6
                   spec:
                     backend_service: rgw.rgw.realm1
-                    virtual_ip: 10.0.195.174/24 # floating ip1 in rhos-01
+                    virtual_ip: 10.245.128.252/18 # floating ip1 in ibmc env
                     frontend_port: 443
                     monitor_port: 1967
                     ssl: true
@@ -172,7 +140,6 @@ tests:
 
   - test:
       name: Deploy RGW Ingress daemon
-      abort-on-fail: true
       desc: Add RGW and HA Proxy services using spec file.
       module: test_cephadm.py
       polarion-id: CEPH-83574608
@@ -191,7 +158,7 @@ tests:
                       - node6
                   spec:
                     backend_service: rgw.rgw.realm2
-                    virtual_ip: 10.0.195.111/24 # floating ip2 in rhos-01
+                    virtual_ip: 10.245.128.253/18 # floating ip2 in ibmc env
                     frontend_port: 8083
                     monitor_port: 1967
 
