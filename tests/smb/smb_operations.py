@@ -249,7 +249,7 @@ def smb_cleanup(
         remove_smb_share(installer, smb_shares, smb_cluster_id)
         # Remove smb cluster
         remove_smb_cluster(installer, smb_cluster_id)
-        sleep(9)
+        sleep(3)
         # Remove subvolume and subvolume group
         # List subvolumes
         cmd = (
@@ -268,7 +268,7 @@ def smb_cleanup(
             f"cephadm shell -- ceph fs subvolumegroup rm {volume} {group_name} --force"
         )
         installer.exec_command(sudo=True, cmd=cmd)
-        sleep(9)
+        sleep(3)
 
     except Exception as e:
         raise CephadmOpsExecutionError(
