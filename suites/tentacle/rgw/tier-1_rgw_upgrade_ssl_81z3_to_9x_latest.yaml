@@ -58,11 +58,9 @@ tests:
                   placement:
                     nodes:
                       - node3
-                      - node4
-                      - node5
                   spec:
                     ssl: true
-                    generate_cert: true
+                    rgw_frontend_ssl_certificate: create-cert
       desc: bootstrap and deployment services with label placements.
       polarion-id: CEPH-83573777
       destroy-cluster: false
@@ -118,7 +116,6 @@ tests:
       config:
         script-name: test_Mbuckets_with_Nobjects.py
         config-file-name: test_Mbuckets_with_Nobjects_download.yaml
-        run-on-haproxy: true
       desc: test to create "M" no of buckets and "N" no of objects with download
       module: sanity_rgw.py
       name: Test download with M buckets with N objects
@@ -186,7 +183,6 @@ tests:
       config:
         script-name: test_Mbuckets_with_Nobjects.py
         config-file-name: test_Mbuckets_with_Nobjects_download.yaml
-        run-on-haproxy: true
       desc: test to create "M" no of buckets and "N" no of objects with download
       module: sanity_rgw.py
       name: Test download with M buckets with N objects
