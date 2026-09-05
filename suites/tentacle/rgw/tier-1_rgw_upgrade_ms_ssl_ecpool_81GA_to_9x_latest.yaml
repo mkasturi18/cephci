@@ -27,8 +27,7 @@ tests:
                   service: cephadm
                   args:
                     rhcs-version: 8.1
-                    release: released
-                    registry-url: registry.redhat.io
+                    release: "released"
                     mon-ip: node1
                     orphan-initial-daemons: true
                     initial-dashboard-password: admin@123
@@ -262,6 +261,16 @@ tests:
       desc: Add monitoring services using spec file.
       module: test_cephadm.py
       polarion-id: CEPH-83574727
+
+  - test:
+      name: check-ceph-health
+      module: ceph_health_check.py
+      config:
+        cephadm: true
+        commands:
+          - "ceph -s"
+      desc: Check for ceph health
+      polarion-id: CEPH-83575200
 
   - test:
       abort-on-fail: true
@@ -527,6 +536,15 @@ tests:
             command: start
             service: upgrade
             verify_cluster_health: true
+  - test:
+      name: check-ceph-health
+      module: ceph_health_check.py
+      config:
+        cephadm: true
+        commands:
+          - "ceph -s"
+      desc: Check for ceph health
+      polarion-id: CEPH-83575200
 
   - test:
       abort-on-fail: true
